@@ -1,0 +1,88 @@
+name: Notify Slack
+on:
+  workflow_call:
+    inputs:
+      success:
+        required: true
+        type: boolean
+      failure:
+        required: true
+        type: boolean
+      success_text:
+        type: string
+        required: false
+        description: Slack message when succeeded.
+        default: '<https://github.com/${{ github.repository }}|${{ github.repository }}> build completed successfully for `${{ github.ref_name }}` by @${{ github.actor }}'
+      failure_text:
+        type: string
+        required: false
+        description: Slack message when failed.
+        default: '<https://github.com/${{ github.repository }}|${{ github.repository }}> build failed for `${{ github.ref_name }}` by @${{ github.actor }}'
+      cancelled_text:
+        type: string
+        required: false
+        description: Slack message when cancelled.
+        default: '<https://github.com/${{ github.repository }}|${{ github.repository }}> build was cancelled for `${{ github.ref_name }}` by @${{ github.actor }}'
+      success_text_prefix:
+        type: string
+        required: false
+        description: Text to be prepended to success_text.
+      failure_text_prefix:
+        type: string
+        required: false
+        description: Text to be prepended to failure_text.
+      cancelled_text_prefix:
+        type: string
+        required: false
+        description: Text to be prepended to cancelled_text.
+    secrets:
+      token:
+        required: true
+      slack_webhook_url:
+        required: true
+jobs:
+  notify-on-success:
+    name: on success
+    runs-on: ubuntu-latest
+    if: ${{ inputs.success }}
+    steps:
+      - name: Notify Slack
+        uses: innocarpe/actions-slack@v1
+        with:
+          status: 'success'
+          success_text: '${{ inputs.success_text_prefix }} ${{ inputs.success_text }}'
+          failure_text: '${{ inputs.failure_text_prefix }} ${{ inputs.failure_text }}'
+          cancelled_text: '${{ inputs.cancelled_text_prefix }} ${{ inputs.cancelled_text }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
+  notify-on-failure:
+    name: on failure
+    runs-on: ubuntu-latest
+    if: ${{ inputs.failure }}
+    steps:
+      - name: Notify Slack
+        uses: innocarpe/actions-slack@v1
+        with:
+          status: 'failure'
+          success_text: '${{ inputs.success_text_prefix }} ${{ inputs.success_text }}'
+          failure_text: '${{ inputs.failure_text_prefix }} ${{ inputs.failure_text }}'
+          cancelled_text: '${{ inputs.cancelled_text_prefix }} ${{ inputs.cancelled_text }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
+  notify-on-cancelled:
+    name: on cancelled
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.success && !inputs.failure }}
+    steps:
+      - name: Notify Slack
+        uses: innocarpe/actions-slack@v1
+        with:
+          status: 'cancelled'
+          success_text: '${{ inputs.success_text_prefix }} ${{ inputs.success_text }}'
+          failure_text: '${{ inputs.failure_text_prefix }} ${{ inputs.failure_text }}'
+          cancelled_text: '${{ inputs.cancelled_text_prefix }} ${{ inputs.cancelled_text }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
