@@ -4,10 +4,10 @@ on:
   workflow_call:
     inputs:
       php_version:
-        default: '8.0'
+        default: '8.2'
         type: string
       node_version:
-        default: '16'
+        default: '20'
         type: string
       jobs:
         default: '["ecs"]'
@@ -31,3 +31,7 @@ jobs:
     uses: ./.github/workflows/prettier.yml
     with:
       node_version: ${{ inputs.node_version }}
+  rector:
+    name: Rector
+    if: ${{ contains(fromJSON(inputs.jobs), 'rector') }}
+    uses: ./.github/workflows/rector.yml
